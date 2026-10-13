@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "id": "supernova",
   "name": "Supernova",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "entry": "index.js",
   "permissions": {
     "domains": [
@@ -182,7 +182,7 @@
         },
         {
           "value": "seeders",
-          "label": "Reported seeders"
+          "label": "Number of seeds"
         },
         {
           "value": "language",

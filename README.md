@@ -22,3 +22,8 @@ network repository is implemented. Nova installs these packages from local files
 
 Use `--validator /path/to/validate-package` for packaging with a prebuilt Nova
 parser, without invoking Cargo or requiring a runtime checkout.
+
+Supernova’s Sort order includes **Number of seeds** (source-reported counts). Move
+it up to prioritize seed count, and choose High or Low for its direction. Unknown
+counts remain last. The stored criterion key is `seeders`, so existing priorities
+and directions survive the display-label update.
