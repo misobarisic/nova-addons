@@ -1,6 +1,6 @@
 # Nova addons
 
-AniKoto and Supernova are independently packaged JavaScript addons for Nova.
+AniKoto, Re:ANIME and Supernova are independently packaged JavaScript addons for Nova.
 Their production source lives under `addons/<id>`. Nova ships the sandbox and
 local ZIP installer, and does not embed or download these addons automatically.
 
@@ -27,3 +27,10 @@ Supernova’s Sort order includes **Number of seeds** (source-reported counts). 
 it up to prioritize seed count, and choose High or Low for its direction. Unknown
 counts remain last. The stored criterion key is `seeders`, so existing priorities
 and directions survive the display-label update.
+
+Re:ANIME ports Yuzono’s ReAnime source and requires Nova with FlixCloud relay
+support (`permissions.flixcloudPlayback`). It includes popular/latest/search
+catalogs, metadata, stable episode identities, sub/dub streams and the usual
+Streams/Metadata switches. Playback uses the upstream `enc-dec.app` decoding
+service. Direct MKV preparation, fonts and chapter markers are not included.
+Run source tests with `node --test addons/reanime/fixtures/provider.test.cjs`.
