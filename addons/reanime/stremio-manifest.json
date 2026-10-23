@@ -1,6 +1,6 @@
 {
   "id": "nova.reanime",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "name": "Re:ANIME",
   "description": "Re:ANIME catalogs, search, and FlixCloud sub/dub streams. Requires Nova with FlixCloud playback support.",
   "resources": ["catalog", "meta", "stream"],

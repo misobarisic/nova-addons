@@ -34,3 +34,7 @@ catalogs, metadata, stable episode identities, sub/dub streams and the usual
 Streams/Metadata switches. Playback uses the upstream `enc-dec.app` decoding
 service. Direct MKV preparation, fonts and chapter markers are not included.
 Run source tests with `node --test addons/reanime/fixtures/provider.test.cjs`.
+
+Re:ANIME 0.1.1 updates the initially distributed 0.1.0 package so installed
+addons receive the required `rundowncdn.top` CDN permission. Import the newer ZIP;
+Nova intentionally rejects changed archives that reuse an installed version.

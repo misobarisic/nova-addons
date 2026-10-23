@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "id": "reanime",
   "name": "Re:ANIME",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "entry": "index.js",
   "permissions": {
     "domains": ["reanime.to", "flixcloud.cc", "enc-dec.app", "rundowncdn.top"],
