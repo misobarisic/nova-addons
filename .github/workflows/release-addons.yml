@@ -48,6 +48,11 @@ jobs:
           persist-credentials: false
       - name: Install Rust
         run: rustup toolchain install stable --profile minimal && rustup default stable
+      - name: Install native parser build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y pkg-config libfontconfig1-dev libfreetype6-dev cmake
+          pkg-config --exists fontconfig freetype2
       - name: Build production package parsers (leaf crates only)
         env:
           CARGO_PROFILE_DEV_DEBUG: '0'
