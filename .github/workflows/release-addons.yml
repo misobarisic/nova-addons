@@ -1,0 +1,91 @@
+name: Release addons
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: addon-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  package:
+    if: github.repository == 'misobarisic/nova-addons'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Read supported runtime refs
+        id: runtime
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, os
+          refs = json.load(open('compatibility.json'))
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              for app, key in [('nova', 'nova'), ('nova-reader', 'reader')]:
+                  ref = refs[app]['ref']
+                  if not ref.startswith('v') or any(c not in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-+' for c in ref):
+                      raise ValueError('runtime ref must be a published version tag')
+                  output.write(f'{key}={ref}\n')
+          PY
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: misobarisic/nova
+          ref: ${{ steps.runtime.outputs.nova }}
+          path: runtimes/nova
+          persist-credentials: false
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: misobarisic/nova-reader
+          ref: ${{ steps.runtime.outputs.reader }}
+          path: runtimes/nova-reader
+          persist-credentials: false
+      - name: Install Rust
+        run: rustup toolchain install stable --profile minimal && rustup default stable
+      - name: Build production package parsers (leaf crates only)
+        env:
+          CARGO_PROFILE_DEV_DEBUG: '0'
+          CARGO_INCREMENTAL: '0'
+          CARGO_TARGET_DIR: ${{ github.workspace }}/parser-target
+        run: |
+          cargo build --locked --manifest-path runtimes/nova/crates/providers/Cargo.toml --example validate-package
+          cp parser-target/debug/examples/validate-package nova-validate-package
+          cargo build --locked --manifest-path runtimes/nova-reader/crates/reader-sources/Cargo.toml --example validate-package
+          cp parser-target/debug/examples/validate-package reader-validate-package
+      - name: Package complete catalog with native validation and reproducibility audit
+        run: |
+          python3 scripts/package-all.py --nova-root runtimes/nova --reader-root runtimes/nova-reader --nova-validator ./nova-validate-package --reader-validator ./reader-validate-package --reader-reference-dir runtimes/nova-reader/addons --output-dir dist
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: addon-release
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    if: github.repository == 'misobarisic/nova-addons' && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: addon-release
+          path: dist
+      - name: Publish tagged catalog
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release create "$RELEASE_TAG" dist/*.zip dist/*.sha256 dist/SHA256SUMS dist/inventory.json --verify-tag --title "Nova and Nova Reader addons $RELEASE_TAG" --notes-file dist/release-notes.md
