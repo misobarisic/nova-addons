@@ -39,11 +39,23 @@ Nova intentionally rejects changed archives that reuse an installed version.
 
 ## Nova Reader: chapter and page sources
 
-Manhwa18.cc (`manhwa18cc` 1.0.1), MangaFire (`mangafire` 1.0.1) and Kagane
-(`kagane` 1.0.0) live under `reader-addons/`. They use Reader source identities,
+Manhwa18.cc (`manhwa18cc` 1.0.1), MangaFire (`mangafire` 1.0.1), Kagane
+(`kagane` 1.0.0), Toonily (`toonily` 1.0.0), Mitaku (`mitaku` 1.0.0) and
+CosplayTele (`cosplaytele` 1.0.0) live under `reader-addons/`. They use Reader source identities,
 chapter/page operations and Reader's sandbox permissions. They provide no Nova
 video streams. These mixed/adult catalogs retain their NSFW declarations and
 source settings; see each original notice for upstream revisions and limitations.
+
+Toonily is English and requires **Nova Reader 0.1.26 or newer**. Its **Show mature
+content** setting defaults off and uses a host-managed cookie grant limited to
+`toonily-mature` on `https://toonily.com`. Cookies remain source/profile scoped,
+in memory, and outside sync and backups. Mitaku and CosplayTele expose each image
+gallery as one chapter; video-only posts return an explicit unsupported error.
+Their reference is Keiyoushi revision `efa93f5a3537856fe830450bbe33f69d21d28167`.
+All three include neutral parser fixtures, Apache-2.0 licenses and attributed
+upstream icons. Metadata samples were checked live; image bytes were not fetched,
+and challenges/site changes can still prevent live use. Unknown image hosts fail
+until verified and permissioned.
 
 Sources and declared icons/scripts/notices/licenses are copied without changes
 from Reader's reference packages. Reader retains its examples and fixtures.
@@ -52,6 +64,9 @@ MangaFire fixtures run with `node --test reader-addons/mangafire/tests/parser.te
 Manhwa18.cc fixtures use their pinned development-only dependency: run
 `npm ci --prefix reader-addons/manhwa18cc/tests`, then
 `node --test reader-addons/manhwa18cc/tests/parser.test.mjs`.
+For Toonily, Mitaku and CosplayTele, run
+`npm ci --ignore-scripts --prefix reader-addons/<id>/tests`, then
+`npm test --prefix reader-addons/<id>/tests`.
 Release packaging does not install Node dependencies or run live-source probes.
 See [Reader provenance](reader-addons/PROVENANCE.md). Individual addon licenses
 and notices apply to their code/assets; the repository license does not replace
@@ -78,7 +93,7 @@ cargo build --locked --manifest-path /path/to/nova-reader/crates/reader-sources/
 python3 scripts/package-all.py --nova-root /path/to/nova --reader-root /path/to/nova-reader --nova-validator /path/to/nova/target/debug/examples/validate-package --reader-validator /path/to/nova-reader/target/debug/examples/validate-package --reader-reference-dir /path/to/nova-reader/addons --output-dir dist
 ```
 
-The result is six app-prefixed ZIPs, adjacent `.zip.sha256` files, `SHA256SUMS`,
+The result is nine app-prefixed ZIPs, adjacent `.zip.sha256` files, `SHA256SUMS`,
 `inventory.json` and a release-notes body. For example,
 `nova-reader-mangafire-1.0.1.zip` belongs in Nova Reader. Verify downloads with
 `sha256sum -c SHA256SUMS` from the release download directory.

@@ -1,10 +1,19 @@
 # Reader source provenance
 
-The three production sources and their synthetic parser fixtures were copied
-without modifying package inputs from Nova Reader's `examples/addons/` at
+The original three production sources and their synthetic parser fixtures were
+copied without modifying package inputs from Nova Reader's `examples/addons/` at
 [`59b5000695f7b280ee22a1dd63dc1e76195c5b39`](https://github.com/misobarisic/nova-reader/tree/59b5000695f7b280ee22a1dd63dc1e76195c5b39/examples/addons).
 This catalog is their independently published home; Reader retains its reference
 copies and fixtures. Existing `addons/` video paths are unchanged.
+
+Toonily 1.0.0, Mitaku 1.0.0 and CosplayTele 1.0.0 are native ports introduced in
+[Nova Reader 0.1.26](https://github.com/misobarisic/nova-reader/tree/v0.1.26/examples/addons).
+Their upstream references are pinned to Keiyoushi
+`efa93f5a3537856fe830450bbe33f69d21d28167`. Their notices identify exact Kotlin
+sources/dependencies, upstream icons, port differences, neutral fixtures and
+metadata-only live checks. Toonily's narrow cookie permission requires the
+0.1.26 host API; the compatibility pin selects its production package parser.
+The original three published package inputs and hashes remain unchanged.
 
 Each source's original `NOTICE.md` records the upstream Keiyoushi source paths,
 immutable revisions, port modifications and limitations. Full Apache-2.0
