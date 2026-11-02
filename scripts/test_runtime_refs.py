@@ -1,4 +1,4 @@
-"""Published runtime selection stays separate from repository-owned goldens."""
+"""Tagged releases package current sources using published runtime tools."""
 import importlib.util
 import json
 from pathlib import Path
@@ -25,7 +25,7 @@ class ReleaseRefsTests(unittest.TestCase):
     def test_external_reader_reference_is_rejected(self):
         compatibility = self.compatibility()
         compatibility["nova-reader"]["referenceRef"] = "0123456789abcdef0123456789abcdef01234567"
-        with self.assertRaisesRegex(ValueError, "repository-local"):
+        with self.assertRaisesRegex(ValueError, "obsolete"):
             REFS.release_refs(compatibility)
 
     def test_runtime_still_requires_version_tag(self):
@@ -50,7 +50,7 @@ class ReleaseRefsTests(unittest.TestCase):
         self.assertEqual(result.stdout, "")
         self.assertIn("published version tag", result.stderr)
 
-    def test_workflow_uses_runtime_tools_and_local_goldens(self):
+    def test_workflow_uses_published_runtime_tools(self):
         workflow = (ROOT / ".github/workflows/release-addons.yml").read_text()
         self.assertIn('python3 scripts/runtime-refs.py >> "$GITHUB_OUTPUT"', workflow)
         self.assertIn("ref: ${{ steps.runtime.outputs.reader }}\n          path: runtimes/nova-reader", workflow)

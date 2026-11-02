@@ -14,7 +14,8 @@ cargo build --locked --manifest-path reader-tests/Cargo.toml --example validate-
 Run these commands from the repository root. Normal tests use neutral synthetic
 records and images. Manual live metadata/cover smoke tests remain ignored unless
 explicitly selected with `--ignored`; website availability is external. The
-Kagane upgrade regression reads its immutable old package from `../reader-packages`.
+Kagane upgrade regression builds an authored legacy-behavior fixture in memory;
+no historical addon ZIP is required.
 The `validate-package` example is copied unchanged from that published runtime
 and builds against the same pinned dependency for package/release validation.
 

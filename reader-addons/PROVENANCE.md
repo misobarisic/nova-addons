@@ -42,17 +42,12 @@ to classify the app. Reader's format 2 plus `nova-reader1` contract already does
 
 The release wrapper calls the apps' own packaging tools and native parsers.
 The `nova-reader.ref` tag in `compatibility.json` selects the published runtime
-recipe/parser (currently Reader 0.1.26). All nine retained Reader ZIP versions
-were copied byte-for-byte into `reader-packages/` with their SHA256SUMS inventory;
-the packager validates every golden and requires exact equality for each current
-Reader source. No Reader reference checkout, reference commit, sibling-source
-path or copied validator implementation supplies these goldens. The independent
+recipe/parser (currently Reader 0.1.26). Every new repository tag packages all
+current addon sources and publishes the resulting ZIPs in a GitHub Release.
+Generated archives and checksum inventories are not committed. The independent
 `reader-tests/` harness pins the published production host directly.
 
-Reader's existing ZIP_DEFLATED recipe and every declared source byte are retained
-so already distributed versions keep their original archive hashes. Release
-filenames gain `nova-reader-`; that does not change ZIP contents. The original
-released hashes also remain hardcoded in the packaging regressions independently
-of the inventory. Never change a published archive's bytes without bumping that
-addon's manifest version. Package notices containing old Reader paths remain
-unchanged as historical attribution; current sources live in `reader-addons/`.
+Reader's existing ZIP_DEFLATED recipe and original package notices are retained.
+Release filenames use `nova-reader-` to identify the app. Notices containing old
+Reader paths remain unchanged as historical attribution; current source code
+lives in `reader-addons/`.

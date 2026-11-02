@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Resolve published runtime tags; archive goldens belong to this repository."""
+"""Resolve published runtime tags used to package tagged addon releases."""
 import json
 from pathlib import Path
 import re
@@ -14,7 +14,7 @@ def release_refs(compatibility):
             raise ValueError("runtime ref must be a published version tag")
         refs[key] = ref
     if "referenceRef" in compatibility["nova-reader"]:
-        raise ValueError("Reader referenceRef is obsolete; goldens are repository-local")
+        raise ValueError("Reader referenceRef is obsolete; releases package current source inputs")
     return refs
 
 

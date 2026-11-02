@@ -16,9 +16,24 @@ fn uid(n: u32) -> String {
     format!("00000000-0000-4000-8000-{n:012}")
 }
 fn archive() -> Vec<u8> {
+    package(false)
+}
+
+// Authored legacy behavior fixture: no historical addon archive is required.
+fn package(legacy: bool) -> Vec<u8> {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../reader-addons/kagane");
-    let m: Value =
+    let mut m: Value =
         serde_json::from_slice(&std::fs::read(root.join("manifest.json")).unwrap()).unwrap();
+    if legacy {
+        m["version"] = json!("1.0.0");
+        let mirror = m["configuration"]
+            .as_array_mut()
+            .unwrap()
+            .iter_mut()
+            .find(|setting| setting["key"] == "mirror")
+            .unwrap();
+        mirror["options"] = json!(["kagane.moe", "kagane.cx", "kagane.net"]);
+    }
     let mut names = vec!["manifest.json".to_owned(), "main.js".to_owned()];
     names.extend(
         m["assets"]
@@ -31,8 +46,16 @@ fn archive() -> Vec<u8> {
     for name in names {
         zip.start_file(&name, zip::write::SimpleFileOptions::default())
             .unwrap();
-        zip.write_all(&std::fs::read(root.join(name)).unwrap())
-            .unwrap();
+        let bytes = match name.as_str() {
+            "manifest.json" => serde_json::to_vec(&m).unwrap(),
+            "main.js" if legacy => br#"globalThis.novaProvider = { handle(r) {
+                if (r.op === "browse") return {items: [], hasNextPage: false};
+                if (r.op === "pages") return {pages: [{id: "legacy-page", url: "https://kstatic.to/fixture.jpg", headers: {}}]};
+                throw new Error("Unsupported fixture operation");
+            }};"#.to_vec(),
+            _ => std::fs::read(root.join(name)).unwrap(),
+        };
+        zip.write_all(&bytes).unwrap();
     }
     zip.finish().unwrap().into_inner()
 }
@@ -253,9 +276,8 @@ fn kagane_native_flow_tokens_filters_and_complete_identity() {
 }
 
 #[test]
-fn old_package_404_regression_and_retired_mirror_settings_migrate_on_upgrade() {
-    let old_zip = Path::new(env!("CARGO_MANIFEST_DIR")).join("../reader-packages/kagane-1.0.0.zip");
-    let old_bytes = std::fs::read(old_zip).unwrap();
+fn legacy_page_headers_and_retired_mirror_settings_migrate_on_upgrade() {
+    let old_bytes = package(true);
     for retired in ["kagane.cx", "kagane.net"] {
         let directory = tempfile::tempdir().unwrap();
         let registry = SourceRegistry::open(directory.path()).unwrap();

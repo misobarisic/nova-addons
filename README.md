@@ -74,9 +74,10 @@ decoded transient cover candidates in isolated native tests. No live images are
 bundled as fixtures. Challenges/site changes can still prevent live use. Unknown image hosts fail
 until verified and permissioned.
 
-This repository is the sole home of these source packages, their fixtures,
-site documentation and immutable ZIP goldens. Reader contains only generic host
-code, catalogue compatibility metadata and neutral executable addon fixtures. See [Reader installation](docs/reader/install.md) and
+This repository is the sole home of these source packages, their fixtures and
+site documentation. Installable ZIPs are generated for GitHub Releases. Reader
+contains generic host code, catalogue compatibility metadata and neutral
+executable addon fixtures. See [Reader installation](docs/reader/install.md) and
 [site documentation](docs/reader/) for source-specific behavior.
 Synthetic tests are retained for development and never enter release packages.
 MangaFire fixtures run with `node --test reader-addons/mangafire/tests/parser.test.mjs`;
@@ -92,14 +93,13 @@ to published Reader 0.1.26 without a sibling Reader checkout. Run
 Release packaging does not install Node dependencies or run live-source probes.
 See [Reader provenance](reader-addons/PROVENANCE.md). Individual addon licenses
 and notices apply to their code/assets; the repository license does not replace
-them. Already distributed addon versions retain identical archive bytes and
-hashes, even though catalog release filenames gain an app prefix.
+them. Catalog release filenames use an app prefix to identify the installer.
 
 ## Verify changes
 
 Run `make check` from this repository root. It runs the six Reader Node parser
 suites, the independent native harness's formatting/Clippy/integration checks,
-and Python packaging/golden regressions. The harness pins published Reader
+and Python release-configuration checks. The harness pins published Reader
 0.1.26 at `5c8cfb3d5d55c1a6552b3ce9910560200bee605b`; it never imports a sibling
 Reader working tree. PRs and main pushes run these checks; tag pushes retain the
 separate packaging/publishing workflow described below.
@@ -110,10 +110,9 @@ The wrapper calls the apps' actual packaging tools and production native parsers
 it carries no second implementation of their manifest validators. Supported
 runtime release tags are recorded in [compatibility.json](compatibility.json).
 The Reader `ref` selects the published runtime's packaging recipe and native
-parser. Golden archives live locally in [reader-packages](reader-packages/),
-with a checked SHA256SUMS inventory covering current and historical versions.
-No separate Reader reference checkout or reference commit is needed. Check out
-the published runtime tags before packaging:
+parser. The packager reads every addon from the current source tree. ZIPs and
+checksum inventories are generated output and are not committed. Check out the
+published runtime tags before packaging:
 
 ```sh
 python3 scripts/package-all.py --nova-root /path/to/nova --reader-root /path/to/nova-reader --output-dir dist
@@ -137,10 +136,7 @@ Nova keeps its sorted ZIP_STORED recipe; Reader keeps its sorted ZIP_DEFLATED
 recipe. Both fix timestamps and permissions and include only declared package
 inputs. The wrapper packages twice, requires byte equality, checks exact members
 and source bytes, rejects development/private/symlink inputs, and runs every ZIP
-through both parsers: matching app accepts, other app rejects. Every current
-Reader package must match its repository-local golden byte-for-byte. All retained
-golden versions also pass their SHA256SUMS inventory and both parser boundaries;
-these checks are mandatory locally and in release automation. Fixtures, tests,
+through both parsers: matching app accepts, other app rejects. Fixtures, tests,
 credentials and this repository's release metadata never enter addon archives.
 No package validation installs an addon or performs source network requests.
 
@@ -153,19 +149,14 @@ wrapper supplies app prefixes to make downloads easier to distinguish.
 
 [Release addons](.github/workflows/release-addons.yml) runs only on `v*` tag
 pushes. It checks out the published runtime tags in `compatibility.json`, builds
-the two leaf parsers, and compares Reader outputs against this repository's
-`reader-packages/` archives. Packaging uses only the runtime checkout's recipe
-and parser; canonical addon inputs and historical goldens come from Nova Addons.
+the two leaf parsers, and packages every current addon from this repository's
+source tree using the runtime checkout's recipe and parser.
 It packages all current addons and publishes a GitHub Release
 with ZIPs, checksums and inventory. It does not run a PR or workspace test/check
 pipeline on tags. Native package validation and reproducibility are part of
 creating the release artifacts. Only the publish job receives `contents: write`.
 
 Publish the referenced app runtime releases before tagging this repository.
-Commit each new Reader version's golden and SHA256SUMS entry alongside its
-canonical source update. Validate packaging and runtime-ref handling with
-`python3 -B -m unittest discover -s scripts -p 'test_*.py'`.
-A catalog release bundles independently versioned addons; it does not rewrite
-their manifest versions. Any change to a published archive's inputs requires
-that addon's version bump. Releases are unsigned local-install archives, with
+Update addon sources and manifest versions, then push a new repository tag to
+package the complete catalog. Releases are unsigned local-install archives, with
 no automatic update repository or installation mechanism.

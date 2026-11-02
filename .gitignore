@@ -2,3 +2,8 @@
 __pycache__/
 node_modules/
 /reader-tests/target/
+
+# Generated addon archives and checksum inventories belong in releases.
+*.zip
+*.sha256
+SHA256SUMS

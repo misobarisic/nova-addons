@@ -135,5 +135,5 @@ failed before listing with `Network("DNS deadline")` during host DNS preflight.
 Thus the successful proxy-based HTTP probes do not establish a successful native
 Reader live session. Live download/decode/device reading and future challenge
 availability remain unverified. Native version 1.0.1 is independent of upstream versionCode 35.
-Canonical sources, synthetic tests and immutable ZIPs now live in this Nova
-Addons repository; see [installation](install.md) and [package goldens](../../reader-packages/).
+Canonical sources and synthetic tests live in this Nova Addons repository.
+Installable ZIPs are generated on tags and published in [GitHub Releases](https://github.com/misobarisic/nova-addons/releases); see [installation](install.md).

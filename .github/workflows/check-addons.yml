@@ -27,5 +27,5 @@ jobs:
           persist-credentials: false
       - name: Install Rust
         run: rustup toolchain install stable --profile minimal --component rustfmt,clippy && rustup default stable
-      - name: Check source parsers, pinned native Reader runtime and immutable packages
+      - name: Check source parsers, pinned native Reader runtime and packaging configuration
         run: make check
