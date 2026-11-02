@@ -24,12 +24,12 @@ let result = call({op:'browse',catalogue: 'latest',page:2});
 assert.equal(result.items[0].id,galleryId); assert.equal(result.items[0].title,'Clockwork Garden'); assert.equal(result.items[0].coverUrl,base+'/images/cover.svg'); assert.equal(result.hasNextPage,true);
 assert.equal(requested.headers.Referer,base+'/'); assert.equal(requested.headers.Origin,base);
 body=read('fixtures/details.html'); result=call({op:'details',id:galleryId+'/'});
-assert.equal(result.id,galleryId); assert.equal(result.title,'Clockwork Garden'); assert.equal(result.status,'completed'); assert.deepEqual(result.genres,['Art','Paper Models']);
+assert.equal(result.id,galleryId); assert.equal(result.coverUrl,base+'/images/full-2.svg'); assert.equal(result.title,'Clockwork Garden'); assert.equal(result.status,'completed'); assert.deepEqual(result.genres,['Art','Paper Models']);
 result=call({op:'chapters',seriesId:galleryId}).chapters; assert.equal(result.length,1); assert.equal(result[0].id,galleryId); assert.equal(result[0].seriesId,galleryId); assert.equal(result[0].title,'Gallery'); assert.equal(result[0].uploadedAt,'2026-10-04');
 result=call({op:'pages',chapterId:galleryId}).pages;
 assert.deepEqual(result.map(page=>page.url),[base+'/images/full-2.svg',base+galleryId.slice(0,galleryId.lastIndexOf('/')+1)+'images/full-1.svg']);
 assert.deepEqual(result.map(page=>page.id),['0','1']); assert.deepEqual(result[0].headers,{Referer:base+galleryId,Origin:base});
-body=read('fixtures/video.html'); assert.match(call({op:'pages',id:galleryId}).error.message,/Video-only/);
+body=read('fixtures/video.html'); assert.equal(call({op:'details',id:galleryId}).coverUrl,null); assert.match(call({op:'pages',id:galleryId}).error.message,/Video-only/);
 for (const [http,code] of [[401,'AuthenticationRequired'],[403,'ChallengeRequired'],[404,'NotFound'],[429,'RateLimited'],[500,'Network']]) {status=http; assert.equal(call({op:'browse',catalogue:'latest'}).error.code,code);}
 status=200;body='<html>Just a moment</html>';assert.equal(call({op:'browse',catalogue:'latest'}).error.code,'ChallengeRequired');
 body='<div>Changed markup</div>';for(const op of ['browse','details','chapters','pages']) assert.equal(call({op,catalogue:'latest',id:galleryId}).error.code,'ParseChanged');

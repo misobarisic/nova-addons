@@ -4,7 +4,7 @@
   "api": "^1.0",
   "id": "cosplaytele",
   "name": "CosplayTele",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "language": "all",
   "nsfw": true,
   "entry": "main.js",

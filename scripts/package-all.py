@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -74,14 +75,54 @@ def commit(runtime):
     return subprocess.check_output(["git", "-C", str(runtime), "rev-parse", "HEAD"], text=True).strip()
 
 
+def reader_goldens(directory=ROOT / "reader-packages"):
+    """Verify the repository-owned, immutable archive inventory before packaging."""
+    directory = Path(directory)
+    if directory.is_symlink():
+        raise ValueError("Reader golden directory must not be a symlink")
+    index = directory / "SHA256SUMS"
+    if index.is_symlink():
+        raise ValueError("Reader golden index must not be a symlink")
+    expected = {}
+    for line in index.read_text(encoding="utf-8").splitlines():
+        match = re.fullmatch(r"([0-9a-f]{64})  ([a-z0-9][A-Za-z0-9._+\-]*\.zip)", line)
+        if not match or match[2] in expected:
+            raise ValueError("invalid or duplicate Reader golden inventory entry")
+        expected[match[2]] = match[1]
+    actual = {path.name for path in directory.glob("*.zip")}
+    if not expected or actual != set(expected):
+        raise ValueError("Reader golden inventory does not match local ZIP files")
+    result = {}
+    for name, digest in sorted(expected.items()):
+        archive = directory / name
+        if archive.is_symlink() or not archive.is_file():
+            raise ValueError(f"Reader golden must be a regular file: {name}")
+        if hashlib.sha256(archive.read_bytes()).hexdigest() != digest:
+            raise ValueError(f"immutable Reader golden changed bytes: {name}")
+        with zipfile.ZipFile(archive) as package:
+            manifest = json.loads(package.read("manifest.json"))
+            if (manifest.get("formatVersion") != 2 or manifest.get("contract") != "nova-reader1"
+                    or name != f"{manifest['id']}-{manifest['version']}.zip"):
+                raise ValueError(f"Reader golden identity mismatch: {name}")
+        result[name] = archive
+    return result
+
+
 def package_all(args):
     roots = {"nova": args.nova_root.resolve(), "nova-reader": args.reader_root.resolve()}
     validators = {
         "nova": validator(roots["nova"], "providers", args.nova_validator),
         "nova-reader": validator(roots["nova-reader"], "reader-sources", args.reader_validator),
     }
+    goldens = reader_goldens()
+    # Audit historical versions too; current source updates never discard them.
+    for archive in goldens.values():
+        run([*validators["nova-reader"], archive], stdout=subprocess.DEVNULL)
+        require_rejection(validators["nova"], archive)
     compatibility = json.loads((ROOT / "compatibility.json").read_text())
-    inventory = {"schemaVersion": 1, "runtimes": {}, "packages": []}
+    inventory = {"schemaVersion": 1, "runtimes": {}, "readerGoldens": {
+        name: hashlib.sha256(path.read_bytes()).hexdigest() for name, path in goldens.items()
+    }, "packages": []}
     for app, runtime in roots.items():
         recipe = runtime / ("scripts/package-addon.py" if app == "nova" else "tools/package-addon.py")
         inventory["runtimes"][app] = {
@@ -121,8 +162,10 @@ def package_all(args):
                     raise ValueError(f"non-reproducible archive: {directory}")
                 other = "nova-reader" if app == "nova" else "nova"
                 require_rejection(validators[other], archives[0])
-                if app == "nova-reader" and args.reader_reference_dir:
-                    reference = args.reader_reference_dir / archives[0].name
+                if app == "nova-reader":
+                    reference = goldens.get(archives[0].name)
+                    if reference is None:
+                        raise ValueError(f"current Reader version has no local golden: {archives[0].name}")
                     if data != reference.read_bytes():
                         raise ValueError(f"existing Reader version changed bytes: {reference}")
                 name = f"{app}-{archives[0].name}"
@@ -164,8 +207,6 @@ def main():
     parser.add_argument("--reader-root", required=True, type=Path)
     parser.add_argument("--nova-validator", type=Path)
     parser.add_argument("--reader-validator", type=Path)
-    parser.add_argument("--reader-reference-dir", type=Path,
-                        help="also require byte equality with already distributed Reader ZIPs")
     parser.add_argument("--output-dir", type=Path, default=ROOT / "dist")
     package_all(parser.parse_args())
 

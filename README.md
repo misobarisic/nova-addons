@@ -41,7 +41,7 @@ Nova intentionally rejects changed archives that reuse an installed version.
 
 Manhwa18.cc (`manhwa18cc` 1.0.1), MangaFire (`mangafire` 1.0.1), Kagane
 (`kagane` 1.0.1), Toonily (`toonily` 1.0.0), Mitaku (`mitaku` 1.0.0) and
-CosplayTele (`cosplaytele` 1.0.0) live under `reader-addons/`. They use Reader source identities,
+CosplayTele (`cosplaytele` 1.0.1) live under `reader-addons/`. They use Reader source identities,
 chapter/page operations and Reader's sandbox permissions. They provide no Nova
 video streams. These mixed/adult catalogs retain their NSFW declarations and
 source settings; see each original notice for upstream revisions and limitations.
@@ -53,6 +53,15 @@ default while retaining compatible settings. No permission expansion or settings
 reset is needed. It works with published Reader 0.1.26; the original Kagane 1.0.0
 archive remains unchanged.
 
+**Toonily and Mitaku are on hold** because of live-site challenge errors. Existing
+packages remain available without challenge-handling changes.
+
+CosplayTele 1.0.1 fixes details clearing a saved catalogue poster: details now
+selects the first gallery image, excluding unrelated sidebar images. Initial
+untouched Browse poster failures were not reproduced; current URLs responded
+successfully in proxy-backed native decode/publication tests for Popular,
+Latest and details. The ordinary native live smoke hit a DNS deadline.
+
 Toonily is English and requires **Nova Reader 0.1.26 or newer**. Its **Show mature
 content** setting defaults off and uses a host-managed cookie grant limited to
 `toonily-mature` on `https://toonily.com`. Cookies remain source/profile scoped,
@@ -60,25 +69,40 @@ in memory, and outside sync and backups. Mitaku and CosplayTele expose each imag
 gallery as one chapter; video-only posts return an explicit unsupported error.
 Their reference is Keiyoushi revision `efa93f5a3537856fe830450bbe33f69d21d28167`.
 All three include neutral parser fixtures, Apache-2.0 licenses and attributed
-upstream icons. Metadata samples were checked live; image bytes were not fetched,
-and challenges/site changes can still prevent live use. Unknown image hosts fail
+upstream icons. Initial port checks used metadata only; CosplayTele 1.0.1 also
+decoded transient cover candidates in isolated native tests. No live images are
+bundled as fixtures. Challenges/site changes can still prevent live use. Unknown image hosts fail
 until verified and permissioned.
 
-Sources and declared icons/scripts/notices/licenses are copied without changes
-from Reader's reference packages. Reader retains its examples and fixtures.
+This repository is the sole home of these source packages, their fixtures,
+site documentation and immutable ZIP goldens. Reader contains only generic host
+code, catalogue compatibility metadata and neutral executable addon fixtures. See [Reader installation](docs/reader/install.md) and
+[site documentation](docs/reader/) for source-specific behavior.
 Synthetic tests are retained for development and never enter release packages.
 MangaFire fixtures run with `node --test reader-addons/mangafire/tests/parser.test.mjs`;
 Manhwa18.cc fixtures use their pinned development-only dependency: run
-`npm ci --prefix reader-addons/manhwa18cc/tests`, then
+`npm ci --ignore-scripts --prefix reader-addons/manhwa18cc/tests`, then
 `node --test reader-addons/manhwa18cc/tests/parser.test.mjs`.
 For Toonily, Mitaku and CosplayTele, run
 `npm ci --ignore-scripts --prefix reader-addons/<id>/tests`, then
 `npm test --prefix reader-addons/<id>/tests`.
+Native QuickJS regressions live in [reader-tests](reader-tests/README.md), pinned
+to published Reader 0.1.26 without a sibling Reader checkout. Run
+`cargo test --locked --manifest-path reader-tests/Cargo.toml`.
 Release packaging does not install Node dependencies or run live-source probes.
 See [Reader provenance](reader-addons/PROVENANCE.md). Individual addon licenses
 and notices apply to their code/assets; the repository license does not replace
 them. Already distributed addon versions retain identical archive bytes and
 hashes, even though catalog release filenames gain an app prefix.
+
+## Verify changes
+
+Run `make check` from this repository root. It runs the six Reader Node parser
+suites, the independent native harness's formatting/Clippy/integration checks,
+and Python packaging/golden regressions. The harness pins published Reader
+0.1.26 at `5c8cfb3d5d55c1a6552b3ce9910560200bee605b`; it never imports a sibling
+Reader working tree. PRs and main pushes run these checks; tag pushes retain the
+separate packaging/publishing workflow described below.
 
 ## Package the complete catalog
 
@@ -86,14 +110,13 @@ The wrapper calls the apps' actual packaging tools and production native parsers
 it carries no second implementation of their manifest validators. Supported
 runtime release tags are recorded in [compatibility.json](compatibility.json).
 The Reader `ref` selects the published runtime's packaging recipe and native
-parser. Its optional `referenceRef` selects a separate Reader checkout containing
-the golden ZIPs for exact byte comparison; it must be a full 40-hex commit ID.
-When omitted, the reference checkout uses the runtime tag. This permits an addon
-update without a new app release while retaining published-version byte checks.
-Check out the runtime versions and Reader reference separately before packaging:
+parser. Golden archives live locally in [reader-packages](reader-packages/),
+with a checked SHA256SUMS inventory covering current and historical versions.
+No separate Reader reference checkout or reference commit is needed. Check out
+the published runtime tags before packaging:
 
 ```sh
-python3 scripts/package-all.py --nova-root /path/to/nova --reader-root /path/to/nova-reader --reader-reference-dir /path/to/reader-reference/addons --output-dir dist
+python3 scripts/package-all.py --nova-root /path/to/nova --reader-root /path/to/nova-reader --output-dir dist
 ```
 
 Use an empty output directory. Cargo builds/runs only the parser examples in the
@@ -102,7 +125,7 @@ Use an empty output directory. Cargo builds/runs only the parser examples in the
 ```sh
 cargo build --locked --manifest-path /path/to/nova/crates/providers/Cargo.toml --example validate-package
 cargo build --locked --manifest-path /path/to/nova-reader/crates/reader-sources/Cargo.toml --example validate-package
-python3 scripts/package-all.py --nova-root /path/to/nova --reader-root /path/to/nova-reader --nova-validator /path/to/nova/target/debug/examples/validate-package --reader-validator /path/to/nova-reader/target/debug/examples/validate-package --reader-reference-dir /path/to/reader-reference/addons --output-dir dist
+python3 scripts/package-all.py --nova-root /path/to/nova --reader-root /path/to/nova-reader --nova-validator /path/to/nova/target/debug/examples/validate-package --reader-validator /path/to/nova-reader/target/debug/examples/validate-package --output-dir dist
 ```
 
 The result is nine app-prefixed ZIPs, adjacent `.zip.sha256` files, `SHA256SUMS`,
@@ -114,10 +137,10 @@ Nova keeps its sorted ZIP_STORED recipe; Reader keeps its sorted ZIP_DEFLATED
 recipe. Both fix timestamps and permissions and include only declared package
 inputs. The wrapper packages twice, requires byte equality, checks exact members
 and source bytes, rejects development/private/symlink inputs, and runs every ZIP
-through both parsers: matching app accepts, other app rejects. The optional
-reference directory additionally guarantees Reader ZIP identity with the pinned
-goldens, including previously distributed versions; release automation requires
-that check. Fixtures, tests,
+through both parsers: matching app accepts, other app rejects. Every current
+Reader package must match its repository-local golden byte-for-byte. All retained
+golden versions also pass their SHA256SUMS inventory and both parser boundaries;
+these checks are mandatory locally and in release automation. Fixtures, tests,
 credentials and this repository's release metadata never enter addon archives.
 No package validation installs an addon or performs source network requests.
 
@@ -130,17 +153,17 @@ wrapper supplies app prefixes to make downloads easier to distinguish.
 
 [Release addons](.github/workflows/release-addons.yml) runs only on `v*` tag
 pushes. It checks out the published runtime tags in `compatibility.json`, builds
-the two leaf parsers, and separately checks out Reader at `referenceRef` (or its
-runtime tag) under `references/nova-reader`. Packaging uses the runtime checkout's
-recipe/parser and compares against `references/nova-reader/addons`. It packages
-all current addons and publishes a GitHub Release
+the two leaf parsers, and compares Reader outputs against this repository's
+`reader-packages/` archives. Packaging uses only the runtime checkout's recipe
+and parser; canonical addon inputs and historical goldens come from Nova Addons.
+It packages all current addons and publishes a GitHub Release
 with ZIPs, checksums and inventory. It does not run a PR or workspace test/check
 pipeline on tags. Native package validation and reproducibility are part of
 creating the release artifacts. Only the publish job receives `contents: write`.
 
 Publish the referenced app runtime releases before tagging this repository.
-An optional Reader reference commit must also be pushed and contain every
-current Reader addon golden. Validate ref handling with
+Commit each new Reader version's golden and SHA256SUMS entry alongside its
+canonical source update. Validate packaging and runtime-ref handling with
 `python3 -B -m unittest discover -s scripts -p 'test_*.py'`.
 A catalog release bundles independently versioned addons; it does not rewrite
 their manifest versions. Any change to a published archive's inputs requires

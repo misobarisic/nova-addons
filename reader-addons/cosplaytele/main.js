@@ -76,7 +76,11 @@
     const galleryId = canonical(href, doc.url);
     return {id: galleryId, title, url: base + galleryId, coverUrl: image(one(html, 'img', 'src'), doc)};
   }
-  function detailCover() { return null; }
+  function detailCover(doc) {
+    // Details replace the saved Series DTO; returning null here erased the
+    // catalogue poster whenever a gallery was opened or refreshed.
+    return image(one(doc.html, '.gallery-item img', 'src'), doc);
+  }
   function tags(doc) {
     return select(doc.html, '#main a[href]', {label: {value: 'text'}, href: {value: 'href'}}).map(row => {
       const full = absolute(row.href, doc.url);

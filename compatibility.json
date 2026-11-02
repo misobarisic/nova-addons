@@ -7,7 +7,6 @@
   "nova-reader": {
     "repository": "misobarisic/nova-reader",
     "ref": "v0.1.26",
-    "referenceRef": "6665abe1f1288896a10939a23e0a9c7fe7fdaec2",
     "formatVersion": 2,
     "contract": "nova-reader1"
   }

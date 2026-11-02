@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Resolve published runtime tags and an optional immutable Reader golden pin."""
+"""Resolve published runtime tags; archive goldens belong to this repository."""
 import json
 from pathlib import Path
 import re
@@ -13,14 +13,8 @@ def release_refs(compatibility):
         if not isinstance(ref, str) or not re.fullmatch(r"v[A-Za-z0-9._+\-]+", ref):
             raise ValueError("runtime ref must be a published version tag")
         refs[key] = ref
-    reader = compatibility["nova-reader"]
-    if "referenceRef" in reader:
-        reference = reader["referenceRef"]
-        if not isinstance(reference, str) or not re.fullmatch(r"[0-9a-fA-F]{40}", reference):
-            raise ValueError("Reader referenceRef must be a full 40-hex commit")
-    else:
-        reference = refs["reader"]
-    refs["reader-reference"] = reference
+    if "referenceRef" in compatibility["nova-reader"]:
+        raise ValueError("Reader referenceRef is obsolete; goldens are repository-local")
     return refs
 
 

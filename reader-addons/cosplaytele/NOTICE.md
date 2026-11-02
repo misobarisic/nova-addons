@@ -3,7 +3,7 @@
 Upstream: https://github.com/keiyoushi/extensions-source
 Pinned commit: `efa93f5a3537856fe830450bbe33f69d21d28167`
 License: Apache License 2.0, retained in full in LICENSE.
-Upstream extension versionCode: 1; native addon version: 1.0.0.
+Upstream extension versionCode: 1; native addon version: 1.0.1.
 
 Ported files at that exact immutable revision:
 
@@ -37,9 +37,25 @@ Domain scope is restricted to the source's declared site hosts (no CDN wildcard)
 Metadata listings and one post per source were checked on 2026-11-02 using a
 standard browser User-Agent: HTTP 200, gallery selectors present, and all sampled
 full-size image URLs on the primary site host. Requests without that User-Agent
-returned HTTP 403. No live image bytes were fetched; broader image host coverage
-is unverified. Future external image hosts fail explicitly until separately
+returned HTTP 403. Initial verification fetched no live image bytes; broader
+image host coverage is unverified. Future external image hosts fail explicitly until separately
 verified and permissioned. Passing fixtures does not establish live
 site availability, challenge bypass, browser/session transfer or video support.
 The independent distribution home is `nova-addons/reader-addons/cosplaytele`;
 this repository retains reviewable source and synthetic regressions.
+
+Version 1.0.1 supplies the first gallery image as the details poster. Previously
+`details` returned `coverUrl: null`, so opening or refreshing a series discarded
+its catalogue poster. Selection is scoped to `.gallery-item img`, excluding
+sidebar images; existing HTTPS/domain checks also apply to this cover URL.
+Live diagnosis checked popular JSON and HTML covers using the host's User-Agent:
+all 20 popular entries had covers; sampled cover HEAD and GET requests returned HTTP 200
+with the existing User-Agent alone and also with Referer/Origin. Initial probes
+read bounded 64-byte WebP prefixes; subsequent native diagnostics decoded cover
+bytes in isolated temporary caches removed at test exit. No site images are
+bundled or retained as fixtures. The direct native transport smoke was blocked at DNS resolution in the
+managed environment, before HTTP. An opt-in proxy-aware native diagnostic (same
+User-Agent, empty cover headers, native decoder and Slint publication) succeeded
+for both Popular JSON and Latest HTML posters, plus their details posters;
+native HTML search also supplied covers. The reported untouched-Browse failure
+on the user's device remains un-reproduced. No host header-policy change was made.
