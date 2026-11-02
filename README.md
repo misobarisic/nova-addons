@@ -147,8 +147,8 @@ wrapper supplies app prefixes to make downloads easier to distinguish.
 
 ## Tagged releases
 
-[Release addons](.github/workflows/release-addons.yml) runs only on `v*` tag
-pushes. It checks out the published runtime tags in `compatibility.json`, builds
+[Release addons](.github/workflows/release-addons.yml) runs on every tag
+push, regardless of its name. It checks out the published runtime tags in `compatibility.json`, builds
 the two leaf parsers, and packages every current addon from this repository's
 source tree using the runtime checkout's recipe and parser.
 It packages all current addons and publishes a GitHub Release

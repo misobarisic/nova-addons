@@ -3,7 +3,7 @@ name: Release addons
 on:
   push:
     tags:
-      - 'v*'
+      - '**'
 
 permissions:
   contents: read
@@ -65,7 +65,7 @@ jobs:
           retention-days: 7
 
   publish:
-    if: github.repository == 'misobarisic/nova-addons' && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    if: github.repository == 'misobarisic/nova-addons' && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     needs: package
     runs-on: ubuntu-latest
     permissions:
