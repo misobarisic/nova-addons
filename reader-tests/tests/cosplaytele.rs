@@ -136,6 +136,29 @@ fn installed() -> (
 fn last_url(transport: &FixtureTransport) -> url::Url {
     url::Url::parse(&transport.requests.lock().unwrap().last().unwrap().url).unwrap()
 }
+// This crate pins the previous Reader release: raw metadata must remain
+// additive while its typed browse/details DTOs continue to ignore the hint.
+#[test]
+fn presentation_hint_is_consistent_and_compatible_with_previous_reader() {
+    let (_root, _registry, source, _transport) = installed();
+    for (op, request) in [
+        ("browse", json!({})),
+        ("browse", json!({"catalogue":"latest"})),
+        ("search", json!({"query":"clock"})),
+        ("details", json!({"id":GALLERY})),
+    ] {
+        let raw = source.call(op, &request).unwrap();
+        let item = if op == "details" {
+            &raw
+        } else {
+            &raw["items"][0]
+        };
+        assert_eq!(item["presentation"], "gallery");
+        assert_eq!(item["id"], GALLERY);
+        let old: reader_sources::Series = serde_json::from_value(item.clone()).unwrap();
+        assert_eq!(old.id, GALLERY);
+    }
+}
 #[test]
 fn native_gallery_flow_preserves_identity_order_and_page_permissions() {
     let (_root, _registry, source, _transport) = installed();

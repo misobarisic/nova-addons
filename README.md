@@ -41,7 +41,7 @@ Nova intentionally rejects changed archives that reuse an installed version.
 
 Manhwa18.cc (`manhwa18cc` 1.0.1), MangaFire (`mangafire` 1.0.1), Kagane
 (`kagane` 1.0.1), Toonily (`toonily` 1.0.0), Mitaku (`mitaku` 1.0.0) and
-CosplayTele (`cosplaytele` 1.0.1) live under `reader-addons/`. They use Reader source identities,
+CosplayTele (`cosplaytele` 1.0.2) live under `reader-addons/`. They use Reader source identities,
 chapter/page operations and Reader's sandbox permissions. They provide no Nova
 video streams. These mixed/adult catalogs retain their NSFW declarations and
 source settings; see each original notice for upstream revisions and limitations.
@@ -55,6 +55,11 @@ archive remains unchanged.
 
 **Toonily and Mitaku are on hold** because of live-site challenge errors. Existing
 packages remain available without challenge-handling changes.
+
+CosplayTele 1.0.2 adds an optional per-entry `presentation: "gallery"` hint in
+listings, search and details. Readers that support Gallery presentation open the
+image grid directly; older Readers ignore the hint and retain their chapter
+workflow. Existing series, chapter and array-index page IDs are unchanged.
 
 CosplayTele 1.0.1 fixes details clearing a saved catalogue poster: details now
 selects the first gallery image, excluding unrelated sidebar images. Initial

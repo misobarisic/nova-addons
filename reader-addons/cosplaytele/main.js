@@ -49,7 +49,7 @@
   }
   function details(doc, identity = canonical(doc.url)) {
     const title = requireHeading(doc), galleryId = identity;
-    return {id: galleryId, title, url: base + galleryId, coverUrl: detailCover(doc), description: DESCRIPTION(title), authors: [], genres: genres(doc), status: 'completed'};
+    return {id: galleryId, title, presentation: 'gallery', url: base + galleryId, coverUrl: detailCover(doc), description: DESCRIPTION(title), authors: [], genres: genres(doc), status: 'completed'};
   }
   function gallery(r, op) {
     const requested = canonical(r.url || (op === 'pages' ? r.chapterId : r.seriesId) || r.id);
@@ -74,7 +74,7 @@
     const href = one(html, 'h5 a', 'href'), title = one(html, 'h5 a');
     if (!href || !title) fail('ParseChanged', 'Gallery listing title/link missing');
     const galleryId = canonical(href, doc.url);
-    return {id: galleryId, title, url: base + galleryId, coverUrl: image(one(html, 'img', 'src'), doc)};
+    return {id: galleryId, title, presentation: 'gallery', url: base + galleryId, coverUrl: image(one(html, 'img', 'src'), doc)};
   }
   function detailCover(doc) {
     // Details replace the saved Series DTO; returning null here erased the
@@ -109,7 +109,7 @@
       if (media != null && !Array.isArray(media)) fail('ParseChanged', 'Popular-post media must be an array');
       const cover = media?.[0]?.source_url;
       if (cover != null && typeof cover !== 'string') fail('ParseChanged', 'Popular-post cover URL invalid');
-      return {id: galleryId, title, url: base + galleryId, coverUrl: cover ? checkedUrl(cover, doc.url) : null};
+      return {id: galleryId, title, presentation: 'gallery', url: base + galleryId, coverUrl: cover ? checkedUrl(cover, doc.url) : null};
     }), hasNextPage: rows.length >= 20};
   }
   function dispatch(r) {
