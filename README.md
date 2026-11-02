@@ -40,11 +40,18 @@ Nova intentionally rejects changed archives that reuse an installed version.
 ## Nova Reader: chapter and page sources
 
 Manhwa18.cc (`manhwa18cc` 1.0.1), MangaFire (`mangafire` 1.0.1), Kagane
-(`kagane` 1.0.0), Toonily (`toonily` 1.0.0), Mitaku (`mitaku` 1.0.0) and
+(`kagane` 1.0.1), Toonily (`toonily` 1.0.0), Mitaku (`mitaku` 1.0.0) and
 CosplayTele (`cosplaytele` 1.0.0) live under `reader-addons/`. They use Reader source identities,
 chapter/page operations and Reader's sandbox permissions. They provide no Nova
 video streams. These mixed/adult catalogs retain their NSFW declarations and
 source settings; see each original notice for upstream revisions and limitations.
+
+Kagane 1.0.1 sends `Origin: https://kagane.moe` on metadata, integrity,
+book-manifest and page requests. Its Mirror setting now offers only
+`kagane.moe`; Reader migrates saved `kagane.cx`/`kagane.net` selections to that
+default while retaining compatible settings. No permission expansion or settings
+reset is needed. It works with published Reader 0.1.26; the original Kagane 1.0.0
+archive remains unchanged.
 
 Toonily is English and requires **Nova Reader 0.1.26 or newer**. Its **Show mature
 content** setting defaults off and uses a host-managed cookie grant limited to
@@ -78,10 +85,15 @@ hashes, even though catalog release filenames gain an app prefix.
 The wrapper calls the apps' actual packaging tools and production native parsers;
 it carries no second implementation of their manifest validators. Supported
 runtime release tags are recorded in [compatibility.json](compatibility.json).
-Check out those runtime versions before packaging:
+The Reader `ref` selects the published runtime's packaging recipe and native
+parser. Its optional `referenceRef` selects a separate Reader checkout containing
+the golden ZIPs for exact byte comparison; it must be a full 40-hex commit ID.
+When omitted, the reference checkout uses the runtime tag. This permits an addon
+update without a new app release while retaining published-version byte checks.
+Check out the runtime versions and Reader reference separately before packaging:
 
 ```sh
-python3 scripts/package-all.py --nova-root /path/to/nova --reader-root /path/to/nova-reader --reader-reference-dir /path/to/nova-reader/addons --output-dir dist
+python3 scripts/package-all.py --nova-root /path/to/nova --reader-root /path/to/nova-reader --reader-reference-dir /path/to/reader-reference/addons --output-dir dist
 ```
 
 Use an empty output directory. Cargo builds/runs only the parser examples in the
@@ -90,7 +102,7 @@ Use an empty output directory. Cargo builds/runs only the parser examples in the
 ```sh
 cargo build --locked --manifest-path /path/to/nova/crates/providers/Cargo.toml --example validate-package
 cargo build --locked --manifest-path /path/to/nova-reader/crates/reader-sources/Cargo.toml --example validate-package
-python3 scripts/package-all.py --nova-root /path/to/nova --reader-root /path/to/nova-reader --nova-validator /path/to/nova/target/debug/examples/validate-package --reader-validator /path/to/nova-reader/target/debug/examples/validate-package --reader-reference-dir /path/to/nova-reader/addons --output-dir dist
+python3 scripts/package-all.py --nova-root /path/to/nova --reader-root /path/to/nova-reader --nova-validator /path/to/nova/target/debug/examples/validate-package --reader-validator /path/to/nova-reader/target/debug/examples/validate-package --reader-reference-dir /path/to/reader-reference/addons --output-dir dist
 ```
 
 The result is nine app-prefixed ZIPs, adjacent `.zip.sha256` files, `SHA256SUMS`,
@@ -103,8 +115,9 @@ recipe. Both fix timestamps and permissions and include only declared package
 inputs. The wrapper packages twice, requires byte equality, checks exact members
 and source bytes, rejects development/private/symlink inputs, and runs every ZIP
 through both parsers: matching app accepts, other app rejects. The optional
-reference directory additionally guarantees Reader ZIP identity with previously
-distributed versions; release automation requires that check. Fixtures, tests,
+reference directory additionally guarantees Reader ZIP identity with the pinned
+goldens, including previously distributed versions; release automation requires
+that check. Fixtures, tests,
 credentials and this repository's release metadata never enter addon archives.
 No package validation installs an addon or performs source network requests.
 
@@ -117,12 +130,18 @@ wrapper supplies app prefixes to make downloads easier to distinguish.
 
 [Release addons](.github/workflows/release-addons.yml) runs only on `v*` tag
 pushes. It checks out the published runtime tags in `compatibility.json`, builds
-the two leaf parsers, packages all current addons and publishes a GitHub Release
+the two leaf parsers, and separately checks out Reader at `referenceRef` (or its
+runtime tag) under `references/nova-reader`. Packaging uses the runtime checkout's
+recipe/parser and compares against `references/nova-reader/addons`. It packages
+all current addons and publishes a GitHub Release
 with ZIPs, checksums and inventory. It does not run a PR or workspace test/check
 pipeline on tags. Native package validation and reproducibility are part of
 creating the release artifacts. Only the publish job receives `contents: write`.
 
 Publish the referenced app runtime releases before tagging this repository.
+An optional Reader reference commit must also be pushed and contain every
+current Reader addon golden. Validate ref handling with
+`python3 -B -m unittest discover -s scripts -p 'test_*.py'`.
 A catalog release bundles independently versioned addons; it does not rewrite
 their manifest versions. Any change to a published archive's inputs requires
 that addon's version bump. Releases are unsigned local-install archives, with

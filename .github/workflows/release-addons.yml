@@ -20,20 +20,11 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
-      - name: Read supported runtime refs
+      - name: Read supported runtime and reference refs
         id: runtime
         shell: bash
         run: |
-          python3 - <<'PY'
-          import json, os
-          refs = json.load(open('compatibility.json'))
-          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
-              for app, key in [('nova', 'nova'), ('nova-reader', 'reader')]:
-                  ref = refs[app]['ref']
-                  if not ref.startswith('v') or any(c not in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-+' for c in ref):
-                      raise ValueError('runtime ref must be a published version tag')
-                  output.write(f'{key}={ref}\n')
-          PY
+          python3 scripts/runtime-refs.py >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: misobarisic/nova
@@ -45,6 +36,13 @@ jobs:
           repository: misobarisic/nova-reader
           ref: ${{ steps.runtime.outputs.reader }}
           path: runtimes/nova-reader
+          persist-credentials: false
+      - name: Check out Reader reference archives
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: misobarisic/nova-reader
+          ref: ${{ steps.runtime.outputs.reader-reference }}
+          path: references/nova-reader
           persist-credentials: false
       - name: Install Rust
         run: rustup toolchain install stable --profile minimal && rustup default stable
@@ -65,7 +63,7 @@ jobs:
           cp parser-target/debug/examples/validate-package reader-validate-package
       - name: Package complete catalog with native validation and reproducibility audit
         run: |
-          python3 scripts/package-all.py --nova-root runtimes/nova --reader-root runtimes/nova-reader --nova-validator ./nova-validate-package --reader-validator ./reader-validate-package --reader-reference-dir runtimes/nova-reader/addons --output-dir dist
+          python3 scripts/package-all.py --nova-root runtimes/nova --reader-root runtimes/nova-reader --nova-validator ./nova-validate-package --reader-validator ./reader-validate-package --reader-reference-dir references/nova-reader/addons --output-dir dist
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: addon-release
